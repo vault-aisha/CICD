@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = "playwright-tests"
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -12,15 +8,21 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Install Dependencies') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'npm ci'
             }
         }
 
         stage('Run Playwright Tests') {
             steps {
-                sh 'docker run --rm --shm-size=2g $DOCKER_IMAGE'
+                sh 'npx playwright test'
+            }
+        }
+
+        stage('Archive Report') {
+            steps {
+                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
         }
     }
