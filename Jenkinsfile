@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     environment {
-        NODE_ENV = 'test'
+        // Add any environment variables if needed
+        NODE_OPTIONS = "--max_old_space_size=4096"
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
-                git url: 'https://github.com/vault-aisha/CICD.git', branch: 'main'
+                checkout scm
             }
         }
 
@@ -26,27 +27,14 @@ pipeline {
 
         stage('Run Playwright Tests') {
             steps {
-                // Generates HTML report in playwright-report folder
+                // Run tests and generate HTML report
                 bat 'npx playwright test --reporter=html'
             }
         }
 
         stage('Archive HTML Report') {
             steps {
-                // Use publishHTML if plugin installed
-                publishHTML(target: [
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: 'playwright-report',
-                    reportFiles: 'index.html',
-                    reportName: 'Playwright Test Report'
-                ])
-            }
-        }
-
-        stage('Archive Artifacts') {
-            steps {
+                // Archive the HTML report as artifacts (safe for any Jenkins)
                 archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
         }
@@ -55,6 +43,12 @@ pipeline {
     post {
         always {
             echo 'Pipeline finished!'
+        }
+        success {
+            echo 'All tests passed!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
