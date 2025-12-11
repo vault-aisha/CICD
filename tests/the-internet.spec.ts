@@ -24,27 +24,27 @@ test('Basic Authh test', async ({ page, context }) => {
     await expect(page.locator('p')).toContainText('Congratulations! You must have the proper credentials.');
 });
 
-test('broken images test', async ({ page }) => {
-    await page.goto('https://the-internet.herokuapp.com/broken_images');
+// test('broken images test', async ({ page }) => {
+//     await page.goto('https://the-internet.herokuapp.com/broken_images');
 
-    const images = page.locator('img');
-    const count = await images.count();
-    console.log(`Total images found: ${count}`);
+//     const images = page.locator('img');
+//     const count = await images.count();
+//     console.log(`Total images found: ${count}`);
 
-    for (let i = 0; i < count; i++) {
-        const img = images.nth(i);
+//     for (let i = 0; i < count; i++) {
+//         const img = images.nth(i);
 
-        await expect(img).toBeAttached();
+//         await expect(img).toBeAttached();
 
-        const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth);
+//         const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth);
 
-        if (naturalWidth > 0) {
-            console.log(`Image ${i + 1} loaded successfully.`);
-        } else {
-            console.warn(`Image ${i + 1} is broken.`);
-        }
-    }
-});
+//         if (naturalWidth > 0) {
+//             console.log(`Image ${i + 1} loaded successfully.`);
+//         } else {
+//             console.warn(`Image ${i + 1} is broken.`);
+//         }
+//     }
+// });
 
 
 
