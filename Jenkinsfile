@@ -1,53 +1,60 @@
 pipeline {
     agent any
 
+    environment {
+        NODE_ENV = 'test'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Checkout your GitHub repo
-                git branch: 'main', url: 'https://github.com/vault-aisha/CICD.git'
+                git url: 'https://github.com/vault-aisha/CICD.git', branch: 'main'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Install Node modules
                 bat 'npm install'
             }
         }
 
         stage('Install Playwright Browsers') {
             steps {
-                // Ensure Playwright browsers are installed
                 bat 'npx playwright install'
             }
         }
 
         stage('Run Playwright Tests') {
             steps {
-                // Run tests and generate HTML report
+                // Generates HTML report in playwright-report folder
                 bat 'npx playwright test --reporter=html'
             }
         }
 
-        stage('Archive Report') {
+        stage('Archive HTML Report') {
             steps {
-                // Archive HTML report so you can view it in Jenkins
-                archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
+                // Use publishHTML if plugin installed
                 publishHTML(target: [
-                    allowMissing: true,
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
                     keepAll: true,
                     reportDir: 'playwright-report',
                     reportFiles: 'index.html',
-                    reportName: 'Playwright HTML Report'
+                    reportName: 'Playwright Test Report'
                 ])
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
         }
     }
 
     post {
         always {
-            echo "Pipeline finished!"
+            echo 'Pipeline finished!'
         }
     }
 }
