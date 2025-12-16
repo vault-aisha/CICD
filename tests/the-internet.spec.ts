@@ -119,25 +119,71 @@ test('Floating Menu test', async ({ page }) => {
   const floatingMenu = page.locator('#menu');
   await expect(floatingMenu).toBeVisible();
 
-  // Scroll down to the bottom
   await page.evaluate(() => {
     window.scrollTo(0, document.body.scrollHeight);
   });
 
-  // Floating menu should still be visible
   await expect(floatingMenu).toBeVisible();
 
-  // Scroll back up
   await page.evaluate(() => {
     window.scrollTo(0, 0);
   });
 
   await expect(floatingMenu).toBeVisible();
 });
+test ('Form Authentication Positive test', async({page})=>{
+    await page.goto('https://the-internet.herokuapp.com/login');
+    await expect(page.getByRole('heading', { name: 'Login Page' })).toBeVisible();
+    await page.locator('#username').fill('tomsmith');
+    await page.locator('#password').fill('SuperSecretPassword!');
+    await page.locator('button[type="submit"]').click();
+    await expect(page.locator('.flash.success')).toContainText('You logged into a secure area!');
+});
 
+test ('Form Authentication Negative test', async({page})=>{
+    await page.goto('https://the-internet.herokuapp.com/login');
+    await expect(page.getByRole('heading', { name: 'Login Page' })).toBeVisible();  
+    await page.locator('#username').fill('wronguser');
+    await page.locator('#password').fill('wrongpassword');
+    await page.locator('button[type="submit"]').click();
+    await expect(page.locator('.flash.error')).toContainText('Your username is invalid!');
+});
 
+test('Horizontal Slider test', async({page})=>{
+    await page.goto('https://the-internet.herokuapp.com/horizontal_slider');
+    await expect(page.getByRole('heading', { name: 'Horizontal Slider' })).toBeVisible();   
+    const slider = page.locator('input[type="range"]');
+    await slider.fill('4');
+    await expect(page.locator('#range')).toHaveText('4');
+});
 
+test('Hover test', async({page})=>{
+    await page.goto('https://the-internet.herokuapp.com/hovers');
+    await expect(page.getByRole('heading', { name: 'Hovers' })).toBeVisible();   
+    const user1 = page.locator('(//div[@class="figure"])[1]');
+    await user1.hover();
+    await expect(user1.locator('text=View profile')).toBeVisible();
+});
 
+test('Multiple Windows test', async({page})=>{
+    await page.goto('https://the-internet.herokuapp.com/windows');
+    await expect(page.getByRole('heading', { name: 'Opening a new window' })).toBeVisible();    
+    const [newPage] = await Promise.all([
+        page.waitForEvent('popup'),
+        page.locator('a[href="/windows/new"]').click()
+    ]);
+    await expect(newPage.locator('h3')).toHaveText('New Window');
+});
+
+test('Redirect Link test', async({page})=>{
+    await page.goto('https://the-internet.herokuapp.com/redirector');
+    await expect(page.getByRole('heading', { name: 'Redirection' })).toBeVisible(); 
+    await Promise.all([
+        page.waitForNavigation(),
+        page.locator('a#redirect').click()
+    ]);
+    await expect(page.locator('h3')).toHaveText('Status Codes');
+});
 
 
 
