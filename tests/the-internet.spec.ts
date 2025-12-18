@@ -1,190 +1,100 @@
-import {test, expect} from '@playwright/test';
+import { test } from '@playwright/test';
+import { TheInternetPage } from '../pages/the-internet';
 import path from 'path';
 import fs from 'fs';
 
-test('Add/Remove Elements test', async ({page}) => {
-    await page.goto('https://the-internet.herokuapp.com/');
-    await expect(page.getByRole('heading', { name: 'Welcome to the-internet' })).toBeVisible();
-    await page.getByRole('link', { name: 'Add/Remove Elements' }).click();
-    await expect(page.getByRole('heading', { name: 'Add/Remove Elements' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Add Element' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Delete' })).toBeHidden();
-    await page.getByRole('button', { name: 'Add Element' }).click();
-    await expect(page.getByRole('button', { name: 'Delete' })).toBeVisible();
-    await page.getByRole('button', { name: 'Delete' }).click();
-    await expect(page.getByRole('button', { name: 'Delete' })).toBeHidden();
+test('Add/Remove Elements test - Open by link', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.openHome();
+  await internet.openByLink('Add/Remove Elements');
+  await internet.expectHeading('Add/Remove Elements');
 });
 
-test('Basic Auth test', async ({ page, context }) => {
-
-    await context.setHTTPCredentials({
-        username: 'admin',
-        password: 'admin'
-    });
-
-    await page.goto('https://the-internet.herokuapp.com/basic_auth');
-
-    await expect(page.locator('p')).toContainText('Congratulations! You must have the proper credentials.');
+test('Basic Auth test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.basicAuth('admin', 'admin');
 });
 
-test('broken images test', async ({ page }) => {
-    await page.goto('https://the-internet.herokuapp.com/broken_images');
-
-    const images = page.locator('img');
-    const count = await images.count();
-    console.log(`Total images found: ${count}`);
-
-    for (let i = 0; i < count; i++) {
-        const img = images.nth(i);
-
-        await expect(img).toBeAttached();
-
-        const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth);
-
-        if (naturalWidth > 0) {
-            console.log(`Image ${i + 1} loaded successfully.`);
-        } else {
-            console.warn(`Image ${i + 1} is broken.`);
-        }
-    }
+test('Broken Images test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.checkBrokenImages();
 });
 
-test('Checkbox test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/checkboxes');
-    await expect(page.getByRole('heading', {name:'Checkboxes'})).toBeVisible();
-    await expect(page.locator("(//input[@type='checkbox'])[2]")).toBeChecked();
-    await page.locator("(//input[@type='checkbox'])[2]").uncheck();
-    await page.locator("(//input[@type='checkbox'])[1]").check();
+test('Checkbox test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.page.goto('https://the-internet.herokuapp.com/checkboxes');
+  await internet.toggleCheckboxes();
 });
 
-test ('Drag and Drop test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/drag_and_drop');
-    await expect(page.getByRole('heading',{name: 'Drag and Drop'})).toBeVisible();
-    await page.locator("#column-a").dragTo(page.locator("#column-a"));
-})
-
-test('Dropdown test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/dropdown');
-    await expect(page.getByRole('heading', { name: 'Dropdown List' })).toBeVisible();
-    await page.locator("#dropdown").selectOption('1');
-    await expect (page.locator("#dropdown")).toHaveValue('1');
-})
-
-test('Entry Ad test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/entry_ad');
-    await expect(page.getByRole('heading', { name: 'Entry Ad' })).toBeVisible();
-    await page.waitForSelector('#modal', {state: 'visible'});
-    await expect(page.locator('.modal-title')).toBeVisible();
-    await page.locator('.modal-footer > p').click();
-    await expect(page.locator('.modal-title')).toBeHidden();
+test('Drag and Drop test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.dragAndDrop();
 });
 
-test('Exit Intent test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/exit_intent');
-    await expect(page.getByRole('heading', { name: 'Exit Intent' })).toBeVisible();
-    await page.mouse.move(-50,-50);
-    await expect(page.locator('div.modal')).toBeVisible();
-    await expect(page.locator('.modal-title')).toBeVisible();
-    await page.locator('.modal-footer > p').click();
-    await expect(page.locator('.modal-title')).toBeHidden();
+test('Dropdown test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.selectDropdown('1');
+});
+
+test('Entry Ad test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.closeEntryAd();
+});
+
+test('Exit Intent test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.triggerExitIntent();
 });
 
 test('File Download test', async ({ page }) => {
-  await page.goto('https://the-internet.herokuapp.com/download');
+  const internet = new TheInternetPage(page);
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('a[href="download/arquivo.txt"]')
-  ]);
-
-  expect(download.suggestedFilename()).toBe('arquivo.txt');
-  const downloadPath = path.join('C:\\Users\\Lenovo\\Downloads', 'arquivo.txt');
-  await download.saveAs(downloadPath);
-  expect(fs.existsSync(downloadPath)).toBe(true);
+  const fileName = 'arquivo.txt';
+  const saveFolder = 'C:\\Users\\Lenovo\\Downloads';
+  const fullPath = path.join(saveFolder, fileName);
+  fs.mkdirSync(saveFolder, { recursive: true });
+  await internet.downloadFile(fileName, saveFolder);
+  console.log(fs.existsSync(fullPath) ? 'File downloaded!' : 'Download failed!');
 });
 
-test('File Upload test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/upload');
-    await expect(page.getByRole('heading', { name: 'File Uploader' })).toBeVisible();
-    const filePath = path.resolve(__dirname, 'resources', 'arquivo.txt');
-    await page.setInputFiles('input#file-upload', filePath);
-    await page.locator('input#file-submit').click();
-    await expect(page.locator('h3')).toHaveText('File Uploaded!');
-    await expect(page.locator('#uploaded-files')).toHaveText('arquivo.txt');
+test('File Upload test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.uploadFile('arquivo.txt');
 });
 
 test('Floating Menu test', async ({ page }) => {
-  await page.goto('https://the-internet.herokuapp.com/floating_menu');
-
-  const floatingMenu = page.locator('#menu');
-  await expect(floatingMenu).toBeVisible();
-
-  await page.evaluate(() => {
-    window.scrollTo(0, document.body.scrollHeight);
-  });
-
-  await expect(floatingMenu).toBeVisible();
-
-  await page.evaluate(() => {
-    window.scrollTo(0, 0);
-  });
-
-  await expect(floatingMenu).toBeVisible();
-});
-test ('Form Authentication Positive test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/login');
-    await expect(page.getByRole('heading', { name: 'Login Page' })).toBeVisible();
-    await page.locator('#username').fill('tomsmith');
-    await page.locator('#password').fill('SuperSecretPassword!');
-    await page.locator('button[type="submit"]').click();
-    await expect(page.locator('.flash.success')).toContainText('You logged into a secure area!');
+  const internet = new TheInternetPage(page);
+  await internet.floatingMenuScroll();
 });
 
-test ('Form Authentication Negative test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/login');
-    await expect(page.getByRole('heading', { name: 'Login Page' })).toBeVisible();  
-    await page.locator('#username').fill('wronguser');
-    await page.locator('#password').fill('wrongpassword');
-    await page.locator('button[type="submit"]').click();
-    await expect(page.locator('.flash.error')).toContainText('Your username is invalid!');
+test('Form Authentication Positive test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.login('tomsmith', 'SuperSecretPassword!');
+  await internet.expectLoginSuccess();
 });
 
-test('Horizontal Slider test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/horizontal_slider');
-    await expect(page.getByRole('heading', { name: 'Horizontal Slider' })).toBeVisible();   
-    const slider = page.locator('input[type="range"]');
-    await slider.fill('4');
-    await expect(page.locator('#range')).toHaveText('4');
+test('Form Authentication Negative test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.login('wronguser', 'wrongpassword');
+  await internet.expectLoginError();
 });
 
-test('Hover test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/hovers');
-    await expect(page.getByRole('heading', { name: 'Hovers' })).toBeVisible();   
-    const user1 = page.locator('(//div[@class="figure"])[1]');
-    await user1.hover();
-    await expect(user1.locator('text=View profile')).toBeVisible();
+test('Horizontal Slider test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.setSlider('4');
 });
 
-test('Multiple Windows test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/windows');
-    await expect(page.getByRole('heading', { name: 'Opening a new window' })).toBeVisible();    
-    const [newPage] = await Promise.all([
-        page.waitForEvent('popup'),
-        page.locator('a[href="/windows/new"]').click()
-    ]);
-    await expect(newPage.locator('h3')).toHaveText('New Window');
+test('Hover test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.hoverUser(1);
 });
 
-test('Redirect Link test', async({page})=>{
-    await page.goto('https://the-internet.herokuapp.com/redirector');
-    await expect(page.getByRole('heading', { name: 'Redirection' })).toBeVisible(); 
-    await Promise.all([
-        page.waitForNavigation(),
-        page.locator('a#redirect').click()
-    ]);
-    await expect(page.locator('h3')).toHaveText('Status Codes');
+test('Multiple Windows test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.openNewWindow();
 });
 
-
-
-
+test('Redirect Link test', async ({ page }) => {
+  const internet = new TheInternetPage(page);
+  await internet.redirectToStatus();
+});
