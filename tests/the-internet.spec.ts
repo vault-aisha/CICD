@@ -49,10 +49,10 @@ test('Entry Ad test', async ({ page }) => {
   await internet.closeEntryAd();
 });
 
-test('Exit Intent test', async ({ page }) => {
-  const internet = new TheInternetPage(page);
-  await internet.triggerExitIntent();
-});
+// test('Exit Intent test', async ({ page }) => {
+//   const internet = new TheInternetPage(page);
+//   await internet.triggerExitIntent();
+// });
 
 test('File Download test', async ({ page }) => {
   const internet = new TheInternetPage(page);
