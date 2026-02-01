@@ -3,6 +3,15 @@ import { TheInternetPage } from '../pages/the-internet';
 import path from 'path';
 import fs from 'fs';
 
+test.describe('The Internet Home Page', () => {
+  let internet: TheInternetPage;
+ 
+  test.beforeEach(async ({ page }) => {
+    internet = new TheInternetPage(page);
+    await internet.openHome();
+  });
+});
+
 test('Add/Remove Elements test - Open by link', async ({ page }) => {
   const internet = new TheInternetPage(page);
   await internet.openHome();
@@ -22,7 +31,6 @@ test('Broken Images test', async ({ page }) => {
 
 test('Checkbox test', async ({ page }) => {
   const internet = new TheInternetPage(page);
-  await internet.page.goto('https://the-internet.herokuapp.com/checkboxes');
   await internet.toggleCheckboxes();
 });
 

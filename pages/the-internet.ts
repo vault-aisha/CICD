@@ -1,9 +1,9 @@
 import { Page, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
+import { BasePage } from './basePage';
 
-export class TheInternetPage {
-  constructor(public page: Page) {}
+export class TheInternetPage extends BasePage {
 
   // 1. Home
   async openHome() {
