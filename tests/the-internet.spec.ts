@@ -49,22 +49,6 @@ test('Entry Ad test', async ({ page }) => {
   await internet.closeEntryAd();
 });
 
-// test('Exit Intent test', async ({ page }) => {
-//   const internet = new TheInternetPage(page);
-//   await internet.triggerExitIntent();
-// });
-
-test('File Download test', async ({ page }) => {
-  const internet = new TheInternetPage(page);
-
-  const fileName = 'arquivo.txt';
-  const saveFolder = 'C:\\Users\\Lenovo\\Downloads';
-  const fullPath = path.join(saveFolder, fileName);
-  fs.mkdirSync(saveFolder, { recursive: true });
-  await internet.downloadFile(fileName, saveFolder);
-  console.log(fs.existsSync(fullPath) ? 'File downloaded!' : 'Download failed!');
-});
-
 test('File Upload test', async ({ page }) => {
   const internet = new TheInternetPage(page);
   await internet.uploadFile('arquivo.txt');
