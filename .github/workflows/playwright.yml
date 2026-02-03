@@ -16,55 +16,67 @@ jobs:
     timeout-minutes: 60
 
     steps:
-    # Checkout the repo
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      # Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    # Setup Node
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
 
-    # Install dependencies
-    - name: Install Dependencies
-      run: npm ci
+      # Install dependencies
+      - name: Install Dependencies
+        run: npm ci
 
-    # Install Playwright browsers
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      # Install Playwright browsers
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
 
-    # Clean previous reports
-    - name: Clean old reports
-      run: |
-        rm -rf allure-results allure-report playwright-report || true
+      # Clean old reports
+      - name: Clean previous reports
+        run: |
+          rm -rf allure-results allure-report playwright-report || true
 
-    # Run Playwright tests with HTML + Allure reporters
-    - name: Run Playwright Tests
-      run: npx playwright test --reporter="list,html,allure-playwright"
+      # Run Playwright tests with HTML + Allure reporters
+      - name: Run Playwright Tests
+        run: npx playwright test
 
-    # Debug: list Allure results to ensure data exists
-    - name: Check Allure Results
-      run: |
-        echo "Allure results folder content:"
-        ls allure-results || echo "No allure-results found!"
+      # Debug: check allure-results exist
+      - name: Verify Allure Results
+        run: |
+          echo "Listing allure-results:"
+          ls allure-results || echo "No allure-results found!"
+          if [ -z "$(ls -A allure-results 2>/dev/null)" ]; then
+            echo "ERROR: allure-results is empty. Tests did not generate results!"
+            exit 1
+          fi
 
-    # Generate Allure HTML report
-    - name: Generate Allure Report
-      run: npx allure generate allure-results --clean -o allure-report
+      # Generate Allure HTML report
+      - name: Generate Allure HTML Report
+        run: npx allure generate allure-results --clean -o allure-report
 
-    # Upload Playwright HTML report
-    - name: Upload Playwright HTML Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: playwright-html-report
-        path: playwright-report/
-        retention-days: 30
+      # Upload Playwright HTML report
+      - name: Upload Playwright HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: playwright-report/
+          retention-days: 30
 
-    # Upload Allure report
-    - name: Upload Allure Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: allure-report
-        path: allure-report/
-        retention-days: 30
+      # Upload Allure results (preferred for serving)
+      - name: Upload Allure Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results/
+          retention-days: 30
+
+      # Upload generated Allure HTML (optional backup)
+      - name: Upload Allure HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 30
